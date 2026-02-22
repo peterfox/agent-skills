@@ -9,16 +9,31 @@ A collection of Claude Code skills for PHP development workflows.
 | [composer-upgrade](composer-upgrade/) | Upgrading PHP projects with Composer — `outdated`, `why-not`, `bump` |
 | [rector-developer](rector-developer/) | Building Rector PHP rules for AST-based code transformations |
 
-## Installing a Skill
+## Installing Skills
 
-1. Download the `.skill` file for the skill you want from the [releases page](https://github.com/peterfox/agent-skills/releases)
-2. Install it via the Claude Code CLI:
+### Via npx (recommended)
+
+Install all skills from this repo directly into Claude Code:
+
+```bash
+npx skills add peterfox/agent-skills
+```
+
+Install a single skill by name:
+
+```bash
+npx skills add peterfox/agent-skills --skill composer-upgrade
+```
+
+### From a release
+
+Download the `.skill` file for the skill you want from the [releases page](https://github.com/peterfox/agent-skills/releases), then install it:
 
 ```bash
 claude skill install composer-upgrade.skill
 ```
 
-## Building from Source
+## Building Locally
 
 Clone the repo and run the packaging script to generate `.skill` files:
 
@@ -28,4 +43,8 @@ cd agent-skills
 ./package-all.sh
 ```
 
-This requires the [skill-creator](https://github.com/anthropics/claude-code) skill to be installed, as it uses its `package_skill.py` script.
+This requires the [skill-creator](https://github.com/anthropics/claude-code) skill to be installed locally.
+
+## License
+
+[MIT](LICENSE)
