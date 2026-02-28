@@ -9,11 +9,12 @@ Rector transforms PHP code by traversing the PHP-Parser AST, matching node types
 
 ## Workflow
 
-1. Identify the PHP-Parser node type(s) to target (see references/node-types.md)
-2. Write the rule class extending `AbstractRector`
-3. If PHP version gated, implement `MinPhpVersionInterface`
-4. If configurable, implement `ConfigurableRectorInterface`
-5. Register the rule in rector.php config
+1. **Check for an existing configurable rule first** — see references/configurable-rules.md. Renaming functions/methods/classes, converting call types, and removing arguments are all covered. Prefer `->withConfiguredRule()` over writing a custom rule for these cases.
+2. Identify the PHP-Parser node type(s) to target (see references/node-types.md)
+3. Write the rule class extending `AbstractRector`
+4. If PHP version gated, implement `MinPhpVersionInterface`
+5. If configurable, implement `ConfigurableRectorInterface`
+6. Register the rule in rector.php config
 
 ## Rule Skeleton
 
@@ -243,6 +244,7 @@ See **references/testing.md** for: config file formats, configurable rule varian
 
 ## Reference Files
 
+- **references/configurable-rules.md** — All built-in configurable rules with config examples (check this before writing a custom rule)
 - **references/node-types.md** — PhpParser node type quick reference (FuncCall, MethodCall, Class_, etc.)
 - **references/helpers.md** — NodeFactory methods, BetterNodeFinder, NodeComparator, PhpDocInfo
 - **references/php-versions.md** — PhpVersionFeature constants by PHP version
