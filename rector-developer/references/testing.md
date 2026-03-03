@@ -137,7 +137,7 @@ namespace Rector\Tests\[Category]\Rector\[NodeType]\[RuleName]\Fixture;
 
 ### No-change fixture (rule should not apply)
 
-When the rule should make no changes, omit the separator entirely — use a single section:
+When the rule should make no changes, create a **separate file per scenario** with a `skip_` prefix. Each file contains a single section only — no `-----` separator. Never group multiple skip scenarios into one file.
 
 ```php
 <?php
@@ -146,10 +146,12 @@ namespace Rector\Tests\[Category]\Rector\[NodeType]\[RuleName]\Fixture;
 
 class SomeClass
 {
-    // This code should NOT be changed by the rule
+    // This code should NOT be changed by the rule — one scenario per file
     public function alreadyCorrect(): void {}
 }
 ```
+
+File naming examples: `skip_already_correct.php.inc`, `skip_static_call.php.inc`, `skip_inside_interface.php.inc`
 
 ---
 
@@ -173,7 +175,7 @@ rules-tests/
 **Fixture file naming:**
 - `fixture.php.inc` — the main general case
 - Descriptive snake_case names for specific cases: `with_variable.php.inc`, `static_call.php.inc`, `nested_class.php.inc`
-- No-change cases often prefixed or named to indicate skipping: `skip_already_correct.php.inc`
+- No-change cases use a `skip_` prefix — **one scenario per file**: `skip_already_correct.php.inc`, `skip_static_call.php.inc`
 
 ---
 

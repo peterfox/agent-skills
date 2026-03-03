@@ -238,7 +238,19 @@ namespace Rector\Tests\[Category]\Rector\[NodeType]\[RuleName]\Fixture;
 
 **Tip:** Write only the input section, run the test, and `FixtureFileUpdater` auto-fills the expected output.
 
-For a no-change case (rule should not apply), omit the `-----` separator — single section only.
+**Skip fixtures (rule should not apply):** Create a separate file per skip scenario, named with a `skip_` prefix. Each file contains a single section only — no `-----` separator. Never put multiple skip scenarios in one file.
+
+```php
+<?php
+
+namespace Rector\Tests\[Category]\Rector\[NodeType]\[RuleName]\Fixture;
+
+// Code that should NOT be changed — one scenario per file
+
+?>
+```
+
+Examples: `skip_already_correct.php.inc`, `skip_static_call.php.inc`, `skip_inside_interface.php.inc`
 
 See **references/testing.md** for: config file formats, configurable rule variants, multi-config test classes, fixture naming, Source/ support classes, and fixture auto-update behaviour.
 
