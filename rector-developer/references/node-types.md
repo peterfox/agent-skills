@@ -150,6 +150,40 @@ $this->isName($node, 'foo')  // bool
 if ($node->name instanceof Expr) { return null; } // dynamic name
 ```
 
+### Creating Class Name Nodes
+
+**Always use `FullyQualified` instead of `Name` for class references** (new, instanceof, extends, type hints, etc.)
+
+`FullyQualified` represents the fully-qualified class name — the leading `\` is implicit, so do not include it in the string.
+
+```php
+use PhpParser\Node\Name\FullyQualified;
+
+// CORRECT — use FullyQualified for class names
+new FullyQualified('App\Something')        // represents \App\Something
+new FullyQualified('Foo\Bar\Baz')          // represents \Foo\Bar\Baz
+
+// WRONG — never prefix with backslash or use plain Name for class refs
+new Name('\App\Something')                 // incorrect
+new Name('App\Something')                  // incorrect
+```
+
+Use `FullyQualified` when constructing nodes whose class/type property holds a class name:
+- `Expr\New_` → `->class`
+- `Expr\Instanceof_` → `->class`
+- `Expr\StaticCall` → `->class`
+- `Expr\ClassConstFetch` → `->class`
+- `Stmt\Class_` → `->extends`, `->implements[]`
+- `Node\Param` / `Stmt\ClassMethod` → `->type` / `->returnType`
+
+```php
+// create "new App\Foo()"
+$new = new Expr\New_(new FullyQualified('App\Foo'));
+
+// create "App\Foo::bar()"
+$staticCall = new Expr\StaticCall(new FullyQualified('App\Foo'), 'bar');
+```
+
 ### Working with Args
 ```php
 // Named arguments (PHP 8.0+)

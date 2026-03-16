@@ -104,6 +104,143 @@ $this->traverseNodesWithCallable($nodes, function (Node $node): int|Node|null {
 $this->mirrorComments($newNode, $oldNode);    // copy comments
 ```
 
+## Creating Class Name Nodes
+
+Always use `Node\Name\FullyQualified` (not `Node\Name`) when referencing class names in AST nodes. The string must not have a leading backslash — `FullyQualified` implies it.
+
+```php
+use PhpParser\Node\Name\FullyQualified;
+
+// CORRECT
+new FullyQualified('App\Something')   // represents \App\Something in PHP
+
+// WRONG — never do this
+new Name('\App\Something')            // incorrect: leading backslash in string
+new Name('App\Something')             // incorrect: Name is for unqualified names only
+```
+
+This applies anywhere a class name appears as a `Name` node: `Expr\New_::$class`, `Expr\Instanceof_::$class`, `Expr\StaticCall::$class`, `Expr\ClassConstFetch::$class`, `Stmt\Class_::$extends`, `Stmt\Class_::$implements`, parameter types, return types, etc.
+
+## Preventing Duplicate Attributes
+
+When a rule adds a PHP attribute (`#[...]`), whether to guard against duplicates depends on whether the attribute allows multiple instances:
+
+- **Non-repeatable attribute** (no `Attribute::IS_REPEATABLE`) — adding it twice is a PHP error. Always guard and skip if already present.
+- **Repeatable attribute** (`Attribute::IS_REPEATABLE`) — multiple instances are valid. Do not skip blindly; only skip if the specific instance you'd add is already there (or always add, depending on the rule's intent).
+
+Check whether the target attribute class is defined with `IS_REPEATABLE` before deciding your guard strategy. When in doubt, check the attribute's declaration.
+
+Use `PhpAttributeAnalyzer` (inject via constructor) to check for existing attributes:
+
+```php
+use Rector\Php80\NodeAnalyzer\PhpAttributeAnalyzer;
+
+public function __construct(
+    private readonly PhpAttributeAnalyzer $phpAttributeAnalyzer,
+) {}
+```
+
+```php
+// Returns true if the node already has the given attribute
+$this->phpAttributeAnalyzer->hasPhpAttribute($node, 'Symfony\Component\Routing\Attribute\Route');
+
+// Returns true if the node has any of the given attributes
+$this->phpAttributeAnalyzer->hasPhpAttributes($node, [
+    'Doctrine\ORM\Mapping\Column',
+    'Doctrine\ORM\Mapping\Id',
+]);
+```
+
+For a **non-repeatable** attribute, return `null` early if already present:
+
+```php
+public function refactor(Node $node): ?Node
+{
+    if ($this->phpAttributeAnalyzer->hasPhpAttribute($node, 'App\MyAttribute')) {
+        return null;
+    }
+
+    // ... add attribute
+    return $node;
+}
+```
+
+**Every rule that adds attributes must have skip fixtures** covering the relevant cases:
+- `skip_attribute_already_present.php.inc` — for non-repeatable attributes, confirms the rule does not add a duplicate
+- For repeatable attributes, add skip fixtures for any other condition that should prevent the rule from applying
+
+```php
+<?php
+// skip_attribute_already_present.php.inc
+// Non-repeatable attribute already present — rule must not add it again
+
+namespace Rector\Tests\Category\Rector\NodeType\MyRule\Fixture;
+
+use App\MyAttribute;
+
+#[MyAttribute]
+class AlreadyHasAttribute
+{
+}
+```
+
+## Reducing Rule Risk
+
+Before transforming a class or its members, consider whether the change is safe in an inheritance context. Rector rules run against arbitrary codebases, so a transformation that looks correct on a standalone class may break subclasses or consumers.
+
+### Non-final classes
+
+If the class being transformed is not `final`, it may be extended. A rule that adds, removes, or changes a method/property/constant on a non-final class could silently break subclasses (e.g. method signature change, new abstract requirement, changed return type).
+
+**Ask: could subclasses be affected by this transformation?**
+
+- If yes and the risk is real, guard with `isFinal()` and skip non-final classes. Add a `skip_non_final_class.php.inc` fixture.
+- If the rule is intentionally broad and the risk is accepted, document that reasoning in the rule's `getRuleDefinition()` description.
+- Some rules legitimately target non-final classes (e.g. adding a type declaration to a public method) — in those cases consider whether it's safe to apply on `public`/`protected` members (see below).
+
+```php
+// Skip if class is not final
+$classNode = $this->betterNodeFinder->findParentType($node, Class_::class);
+if (! $classNode instanceof Class_) {
+    return null;
+}
+if (! $classNode->isFinal()) {
+    return null;
+}
+```
+
+### Public and protected members
+
+Public and protected methods, properties, and constants form the class's API contract — both for external callers and for subclasses. Changing them (renaming, adding/removing parameters, changing types, adding attributes) carries more risk than changing private members.
+
+**Ask: is this member `public` or `protected`?**
+
+- `private` members — safe to transform; no external or inheritance contract.
+- `protected` members — subclasses may override or depend on the original signature. Consider skipping, or at minimum add skip fixtures for protected cases.
+- `public` members — broadest risk. Weigh whether the rule should be limited to `private`, opt-in via configuration, or require the class to be `final`.
+
+```php
+// Example: only transform private methods
+if (! $node->isPrivate()) {
+    return null;
+}
+
+// Example: skip public/protected properties
+if ($node->isPublic() || $node->isProtected()) {
+    return null;
+}
+```
+
+### Required skip fixtures for risky scenarios
+
+When a rule targets class members, add skip fixtures for the cases it consciously avoids:
+
+- `skip_non_final_class.php.inc` — rule skips classes that are not final
+- `skip_public_method.php.inc` — rule skips public members
+- `skip_protected_property.php.inc` — rule skips protected members
+
+These fixtures document the rule's intended scope and prevent regressions if the guard is accidentally removed.
+
 ## Injected Services
 
 Inject via constructor (autowired by DI container):

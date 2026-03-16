@@ -8,7 +8,8 @@
 5. [NodeNameResolver](#nodenameresolver)
 6. [NodeTypeResolver](#nodetyperesolver)
 7. [VisibilityManipulator](#visibilitymanipulator)
-8. [ValueObject Helpers](#valueobject-helpers)
+8. [PhpAttributeAnalyzer](#phpattributeanalyzer)
+9. [ValueObject Helpers](#valueobject-helpers)
 
 ---
 
@@ -264,6 +265,55 @@ $this->visibilityManipulator->makeStatic($node);
 $this->visibilityManipulator->makeReadonly($node);   // PHP 8.1+
 $this->visibilityManipulator->removeFinal($node);
 ```
+
+---
+
+## PhpAttributeAnalyzer
+
+**Inject via constructor.** Use this to check whether a PHP 8 attribute already exists on a node.
+
+```php
+use Rector\Php80\NodeAnalyzer\PhpAttributeAnalyzer;
+
+public function __construct(
+    private readonly PhpAttributeAnalyzer $phpAttributeAnalyzer,
+) {}
+```
+
+```php
+// Check for a single attribute by FQN
+$this->phpAttributeAnalyzer->hasPhpAttribute($node, 'Symfony\Component\Routing\Attribute\Route');
+
+// Check for any of multiple attributes
+$this->phpAttributeAnalyzer->hasPhpAttributes($node, [
+    'Doctrine\ORM\Mapping\Column',
+    'Doctrine\ORM\Mapping\Id',
+]);
+```
+
+Works on any node that can carry attributes: `Stmt\Class_`, `Stmt\ClassMethod`, `Stmt\Property`, `Node\Param`, `Stmt\Function_`, `Stmt\ClassConst`.
+
+**Whether to guard depends on the attribute's repeatability:**
+
+- **Non-repeatable** (no `Attribute::IS_REPEATABLE`) — adding it twice is a PHP fatal error. Always guard and return `null` if already present.
+- **Repeatable** (`Attribute::IS_REPEATABLE`) — multiple instances are valid. Only guard if the specific instance you would add is already there, or if the rule's intent requires it.
+
+Check the target attribute class declaration to confirm which case applies.
+
+```php
+// Guard for a non-repeatable attribute
+public function refactor(Node $node): ?Node
+{
+    if ($this->phpAttributeAnalyzer->hasPhpAttribute($node, 'App\MyAttribute')) {
+        return null; // already present, skip
+    }
+
+    // ... add the attribute
+    return $node;
+}
+```
+
+**Add a skip fixture** (`skip_attribute_already_present.php.inc`) for non-repeatable attributes to confirm the rule does not produce a duplicate. For repeatable attributes, add skip fixtures for any other condition that should prevent the rule from applying.
 
 ---
 

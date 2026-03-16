@@ -153,6 +153,14 @@ class SomeClass
 
 File naming examples: `skip_already_correct.php.inc`, `skip_static_call.php.inc`, `skip_inside_interface.php.inc`
 
+**Inheritance and visibility skip fixtures:** When a rule guards against risky transformations on non-final classes or public/protected members, add explicit skip files to document and test those guards:
+
+- `skip_non_final_class.php.inc` — rule does not apply to classes that are not `final`
+- `skip_public_method.php.inc` — rule does not apply to `public` methods/properties
+- `skip_protected_property.php.inc` — rule does not apply to `protected` members
+
+These are as important as functional fixtures — they prove the rule stays within its intended scope.
+
 ---
 
 ## Directory Layout
