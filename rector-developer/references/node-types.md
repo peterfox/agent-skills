@@ -203,17 +203,4 @@ $scope = $node->getAttribute(AttributeKey::SCOPE);   // PHPStan Scope
 $original = $node->getAttribute(AttributeKey::ORIGINAL_NODE);
 ```
 
-### PHPStan Type Checking
-```php
-use PHPStan\Type\ObjectType;
-use PHPStan\Type\StringType;
-use PHPStan\Type\NullType;
-use PHPStan\Type\UnionType;
-
-$type = $this->getType($node);
-$this->isObjectType($node, new ObjectType('Foo\Bar'));
-
-// Check type manually
-$type instanceof StringType
-$type instanceof ObjectType && $type->getClassName() === 'Foo'
-```
+See **helpers.md** (NodeTypeResolver section) for `getType()`, `isObjectType()`, and common PHPStan type classes.

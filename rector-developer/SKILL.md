@@ -106,83 +106,13 @@ $this->mirrorComments($newNode, $oldNode);    // copy comments
 
 ## Creating Class Name Nodes
 
-Always use `Node\Name\FullyQualified` (not `Node\Name`) when referencing class names in AST nodes. The string must not have a leading backslash — `FullyQualified` implies it.
-
-```php
-use PhpParser\Node\Name\FullyQualified;
-
-// CORRECT
-new FullyQualified('App\Something')   // represents \App\Something in PHP
-
-// WRONG — never do this
-new Name('\App\Something')            // incorrect: leading backslash in string
-new Name('App\Something')             // incorrect: Name is for unqualified names only
-```
-
-This applies anywhere a class name appears as a `Name` node: `Expr\New_::$class`, `Expr\Instanceof_::$class`, `Expr\StaticCall::$class`, `Expr\ClassConstFetch::$class`, `Stmt\Class_::$extends`, `Stmt\Class_::$implements`, parameter types, return types, etc.
+Always use `Node\Name\FullyQualified` for class references in AST nodes — never `Node\Name`. The string must not have a leading backslash. See **references/node-types.md** (Creating Class Name Nodes) for the full list of affected node properties.
 
 ## Preventing Duplicate Attributes
 
-When a rule adds a PHP attribute (`#[...]`), whether to guard against duplicates depends on whether the attribute allows multiple instances:
+When adding PHP attributes, use `PhpAttributeAnalyzer` (inject via constructor) to check if the attribute is already present. Guard non-repeatable attributes with an early `return null`; for repeatable attributes, only guard when the specific instance you'd add is already there. Always add a `skip_attribute_already_present.php.inc` fixture for non-repeatable attributes.
 
-- **Non-repeatable attribute** (no `Attribute::IS_REPEATABLE`) — adding it twice is a PHP error. Always guard and skip if already present.
-- **Repeatable attribute** (`Attribute::IS_REPEATABLE`) — multiple instances are valid. Do not skip blindly; only skip if the specific instance you'd add is already there (or always add, depending on the rule's intent).
-
-Check whether the target attribute class is defined with `IS_REPEATABLE` before deciding your guard strategy. When in doubt, check the attribute's declaration.
-
-Use `PhpAttributeAnalyzer` (inject via constructor) to check for existing attributes:
-
-```php
-use Rector\Php80\NodeAnalyzer\PhpAttributeAnalyzer;
-
-public function __construct(
-    private readonly PhpAttributeAnalyzer $phpAttributeAnalyzer,
-) {}
-```
-
-```php
-// Returns true if the node already has the given attribute
-$this->phpAttributeAnalyzer->hasPhpAttribute($node, 'Symfony\Component\Routing\Attribute\Route');
-
-// Returns true if the node has any of the given attributes
-$this->phpAttributeAnalyzer->hasPhpAttributes($node, [
-    'Doctrine\ORM\Mapping\Column',
-    'Doctrine\ORM\Mapping\Id',
-]);
-```
-
-For a **non-repeatable** attribute, return `null` early if already present:
-
-```php
-public function refactor(Node $node): ?Node
-{
-    if ($this->phpAttributeAnalyzer->hasPhpAttribute($node, 'App\MyAttribute')) {
-        return null;
-    }
-
-    // ... add attribute
-    return $node;
-}
-```
-
-**Every rule that adds attributes must have skip fixtures** covering the relevant cases:
-- `skip_attribute_already_present.php.inc` — for non-repeatable attributes, confirms the rule does not add a duplicate
-- For repeatable attributes, add skip fixtures for any other condition that should prevent the rule from applying
-
-```php
-<?php
-// skip_attribute_already_present.php.inc
-// Non-repeatable attribute already present — rule must not add it again
-
-namespace Rector\Tests\Category\Rector\NodeType\MyRule\Fixture;
-
-use App\MyAttribute;
-
-#[MyAttribute]
-class AlreadyHasAttribute
-{
-}
-```
+See **references/helpers.md** (PhpAttributeAnalyzer section) for injection, method signatures, and repeatability guidance.
 
 ## Reducing Rule Risk
 
@@ -231,15 +161,6 @@ if ($node->isPublic() || $node->isProtected()) {
 }
 ```
 
-### Required skip fixtures for risky scenarios
-
-When a rule targets class members, add skip fixtures for the cases it consciously avoids:
-
-- `skip_non_final_class.php.inc` — rule skips classes that are not final
-- `skip_public_method.php.inc` — rule skips public members
-- `skip_protected_property.php.inc` — rule skips protected members
-
-These fixtures document the rule's intended scope and prevent regressions if the guard is accidentally removed.
 
 ## Injected Services
 
@@ -318,78 +239,13 @@ Categories: `CodeQuality`, `CodingStyle`, `DeadCode`, `EarlyReturn`, `Naming`, `
 
 ## Writing Tests
 
-Every rule needs a test class extending `AbstractRectorTestCase` and at least one fixture file.
+Every rule needs a test class extending `AbstractRectorTestCase` with fixtures in a `Fixture/` directory and a config in `config/configured_rule.php`.
 
-**Minimal test class** (`rules-tests/[Category]/Rector/[NodeType]/[RuleName]/[RuleName]RectorTest.php`):
+**Fixture tip:** Write only the input section, run the test, and `FixtureFileUpdater` fills the expected output automatically.
 
-```php
-<?php
+**Skip fixtures:** One `skip_*.php.inc` file per no-change scenario — single section, no `-----` separator.
 
-declare(strict_types=1);
-
-namespace Rector\Tests\[Category]\Rector\[NodeType]\[RuleName];
-
-use Iterator;
-use PHPUnit\Framework\Attributes\DataProvider;
-use Rector\Testing\PHPUnit\AbstractRectorTestCase;
-
-final class [RuleName]RectorTest extends AbstractRectorTestCase
-{
-    #[DataProvider('provideData')]
-    public function test(string $filePath): void
-    {
-        $this->doTestFile($filePath);
-    }
-
-    public static function provideData(): Iterator
-    {
-        return self::yieldFilesFromDirectory(__DIR__ . '/Fixture');
-    }
-
-    public function provideConfigFilePath(): string
-    {
-        return __DIR__ . '/config/configured_rule.php';
-    }
-}
-```
-
-**Fixture file** (`Fixture/fixture.php.inc`):
-
-```php
-<?php
-
-namespace Rector\Tests\[Category]\Rector\[NodeType]\[RuleName]\Fixture;
-
-// INPUT code before rule runs
-
-?>
------
-<?php
-
-namespace Rector\Tests\[Category]\Rector\[NodeType]\[RuleName]\Fixture;
-
-// EXPECTED code after rule runs
-
-?>
-```
-
-**Tip:** Write only the input section, run the test, and `FixtureFileUpdater` auto-fills the expected output.
-
-**Skip fixtures (rule should not apply):** Create a separate file per skip scenario, named with a `skip_` prefix. Each file contains a single section only — no `-----` separator. Never put multiple skip scenarios in one file.
-
-```php
-<?php
-
-namespace Rector\Tests\[Category]\Rector\[NodeType]\[RuleName]\Fixture;
-
-// Code that should NOT be changed — one scenario per file
-
-?>
-```
-
-Examples: `skip_already_correct.php.inc`, `skip_static_call.php.inc`, `skip_inside_interface.php.inc`
-
-See **references/testing.md** for: config file formats, configurable rule variants, multi-config test classes, fixture naming, Source/ support classes, and fixture auto-update behaviour.
+See **references/testing.md** for the full test class template, fixture format, config file formats, configurable rule variants, and special cases.
 
 ## Reference Files
 
