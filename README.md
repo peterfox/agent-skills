@@ -9,6 +9,7 @@ A collection of Claude Code skills for PHP development workflows.
 | [composer-upgrade](composer-upgrade/) | Upgrading PHP projects with Composer — `outdated`, `why-not`, `bump` |
 | [phpstan-developer](phpstan-developer/) | Building PHPStan rules, collectors, and type extensions |
 | [rector-developer](rector-developer/) | Building Rector PHP rules for AST-based code transformations |
+| [slidewire-developer](slidewire-developer/) | Building and refining SlideWire presentations in Laravel/Livewire |
 
 ## Installing Skills
 
