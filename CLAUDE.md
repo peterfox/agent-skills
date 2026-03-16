@@ -55,6 +55,18 @@ Instructions for Claude...
 
 Delete any example files from `init_skill.py` that aren't needed.
 
+## Reviewing an Existing Skill
+
+When asked to review or improve a skill, read all files in the skill directory before making any changes: `SKILL.md` and every file in `references/`, `scripts/`, and `assets/`. Then look for:
+
+- **Duplication between SKILL.md and reference files** — content that appears in both should live only in the reference file, with SKILL.md reduced to a one- or two-line pointer
+- **Duplication across reference files** — consolidate or add cross-references
+- **Over-explained content** — remove prose that restates what a code example already shows clearly; trust that Claude can read code
+- **Long sections that belong in references** — any section in SKILL.md approaching 20+ lines on a single sub-topic is a candidate to move to a dedicated reference file
+- **Sections with no cross-reference** — every reference file should be mentioned from SKILL.md with guidance on when to read it; orphaned reference files won't get used
+
+When trimming, preserve the key decision rules and non-obvious patterns. What gets cut is repetition, verbose explanation of self-evident code, and content that is already comprehensively covered elsewhere.
+
 ## Packaging a Skill
 
 Package a single skill:
