@@ -7,8 +7,10 @@ A collection of Claude Code skills for PHP development workflows.
 | Skill | Description |
 |-------|-------------|
 | [composer-upgrade](composer-upgrade/) | Upgrading PHP projects with Composer — `outdated`, `why-not`, `bump` |
+| [packagist](packagist/) | Searching and looking up PHP packages on Packagist via the API |
 | [phpstan-developer](phpstan-developer/) | Building PHPStan rules, collectors, and type extensions |
 | [rector-developer](rector-developer/) | Building Rector PHP rules for AST-based code transformations |
+| [serpapi](serpapi/) | Searching Google, Google Shopping, Google Jobs, eBay, and Amazon via SerpApi |
 | [slidewire-developer](slidewire-developer/) | Building and refining SlideWire presentations in Laravel/Livewire |
 
 ## Installing Skills
