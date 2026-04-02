@@ -1,5 +1,27 @@
 # Composer Command Reference
 
+## Global Flags for Non-Interactive / Agent Use
+
+Always use these flags when running Composer commands as an agent to suppress progress bars, interactive prompts, and ANSI escape codes:
+
+| Flag | Description |
+|------|-------------|
+| `--no-interaction` / `-n` | Never ask interactive questions; use defaults. Prevents commands from hanging waiting for input. |
+| `--no-progress` | Suppress the download/install progress bar. Reduces noise in `update`, `install`, `require`. |
+| `--no-ansi` | Strip ANSI color/formatting codes from output. Produces clean, parseable text. |
+
+**Apply to all mutating commands:**
+```bash
+composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi
+composer install --no-interaction --no-progress --no-ansi
+composer require vendor/package --no-interaction --no-progress --no-ansi
+composer bump --no-interaction --no-ansi
+```
+
+Read-only commands (`outdated`, `why`, `why-not`, `show`) do not produce progress bars, so `--no-interaction --no-ansi` is sufficient for those.
+
+---
+
 ## composer outdated
 
 Full alias: `composer show --outdated`

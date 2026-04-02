@@ -16,7 +16,7 @@ Follow this sequence when upgrading a PHP project:
 5. **Test**
 6. **Harden constraints** → `composer bump` (applications only)
 
-See [references/commands.md](references/commands.md) for full flag reference.
+See [references/commands.md](references/commands.md) for full flag reference, including global flags for non-interactive use (`--no-interaction --no-progress --no-ansi`).
 See [references/upgrade-workflow.md](references/upgrade-workflow.md) for detailed strategies.
 
 ## Core Commands
@@ -63,10 +63,10 @@ composer why-not vendor/package     # inverse: what conflicts with it
 ### composer update
 
 ```bash
-composer update                                  # update all (risky on large projects)
-composer update vendor/package                   # update one package
-composer update vendor/package --with-all-dependencies  # also update its deps
-composer update --dry-run                        # preview changes without applying
+composer update                                                                        # update all (risky on large projects)
+composer update vendor/package --no-interaction --no-progress --no-ansi               # update one package
+composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi  # also update its deps
+composer update --dry-run --no-interaction --no-ansi                                  # preview changes without applying
 ```
 
 ## Common Patterns
@@ -92,8 +92,8 @@ Lists every package that lacks a `php: ^8.2` constraint, sorted by most blocking
 Prefer updating direct dependencies one at a time with `--dry-run` first:
 
 ```bash
-composer update vendor/package --with-all-dependencies --dry-run
-composer update vendor/package --with-all-dependencies
+composer update vendor/package --with-all-dependencies --dry-run --no-interaction --no-ansi
+composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi
 ```
 
 ### Relaxing constraints in composer.json
