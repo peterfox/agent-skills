@@ -170,6 +170,34 @@ Accepts `true`, `false`, `"dev"`, or `"no-dev"`.
 
 ---
 
+## composer audit
+
+Checks installed packages against the Packagist security advisories database.
+
+| Flag | Description |
+|------|-------------|
+| `--no-dev` | Skip `require-dev` packages |
+| `--locked` | Check `composer.lock` versions rather than installed |
+| `--format=json` | JSON output for scripting |
+| `--abandoned` | Also flag abandoned packages (Composer 2.6+) |
+| `--ignore-advisories` | Skip specific advisory IDs (Composer 2.6+, repeatable) |
+
+Exit code is non-zero if advisories are found — use in CI to fail builds on vulnerable deps.
+
+**Example: CI security gate (production deps only):**
+```bash
+composer audit --no-dev
+```
+
+**Example: JSON output for scripting:**
+```bash
+composer audit --format=json | jq '.advisories | keys[]'
+```
+
+See [references/audit.md](audit.md) for a full prioritization framework and fix workflow.
+
+---
+
 ## composer show
 
 General package inspection tool used alongside upgrade workflows.

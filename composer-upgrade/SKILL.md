@@ -1,6 +1,6 @@
 ---
 name: composer-upgrade
-description: Guides PHP project upgrades using Composer commands. Use when helping users upgrade PHP packages, understand dependency conflicts, interpret `composer outdated` output, use `composer why-not` to diagnose version constraints, use `composer why` to trace dependencies, use `composer bump` to harden version constraints after upgrading, plan safe upgrade paths, resolve package version conflicts in composer.json, or resolve merge conflicts in composer.lock.
+description: Guides PHP project upgrades using Composer commands. Use when helping users upgrade PHP packages, check for security vulnerabilities with `composer audit`, prioritize which packages to upgrade first, understand dependency conflicts, interpret `composer outdated` output, use `composer why-not` to diagnose version constraints, use `composer why` to trace dependencies, use `composer bump` to harden version constraints after upgrading, plan safe upgrade paths, resolve package version conflicts in composer.json, or resolve merge conflicts in composer.lock. Trigger this skill whenever the user mentions composer packages, PHP dependencies, outdated packages, CVEs in PHP projects, or security advisories.
 ---
 
 # Composer Upgrade
@@ -9,15 +9,19 @@ description: Guides PHP project upgrades using Composer commands. Use when helpi
 
 Follow this sequence when upgrading a PHP project:
 
-1. **Identify what's outdated** → `composer outdated`
-2. **Diagnose blockers** → `composer why-not vendor/package version`
-3. **Trace dependencies** → `composer why vendor/package`
-4. **Update packages** → `composer update vendor/package --with-all-dependencies`
-5. **Test**
-6. **Harden constraints** → `composer bump` (applications only)
+1. **Check for security issues** → `composer audit` — fixes here are highest priority
+2. **Identify what's outdated** → `composer outdated`
+3. **Prioritize** — packages with CVEs AND outdated go first; see [references/audit.md](references/audit.md)
+4. **Diagnose blockers** → `composer why-not vendor/package version`
+5. **Trace dependencies** → `composer why vendor/package`
+6. **Update packages** → `composer update vendor/package --with-all-dependencies`
+7. **Test**
+8. **Harden constraints** → `composer bump` (applications only)
+9. **Re-audit** → `composer audit` to confirm all advisories are resolved
 
 See [references/commands.md](references/commands.md) for full flag reference, including global flags for non-interactive use (`--no-interaction --no-progress --no-ansi`).
 See [references/upgrade-workflow.md](references/upgrade-workflow.md) for detailed strategies, including merge conflict resolution.
+See [references/audit.md](references/audit.md) for security audit details, severity tiers, and how to build a prioritized package list.
 
 ## Resolving composer.lock Merge Conflicts
 

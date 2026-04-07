@@ -259,6 +259,5 @@ It groups prod and dev packages separately and annotates each line with the oldâ
 - Run `composer bump` after updates in application projects, and commit `composer.json` alongside `composer.lock`.
 - Enable `"bump-after-update": true` in `composer.json` config to automate this for the whole team.
 - Run `composer validate` after manual edits to `composer.json`.
-- Use `composer audit` to check for known security vulnerabilities in installed packages.
 - `composer show --locked` shows what's in the lock file vs. what's installed â€” useful after merge conflicts.
 - When resolving merge conflicts in `composer.lock`, run `composer install` rather than manually editing the lock file.
