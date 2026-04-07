@@ -1,6 +1,6 @@
 ---
 name: composer-upgrade
-description: Guides PHP project upgrades using Composer commands. Use when helping users upgrade PHP packages, understand dependency conflicts, interpret `composer outdated` output, use `composer why-not` to diagnose version constraints, use `composer why` to trace dependencies, use `composer bump` to harden version constraints after upgrading, plan safe upgrade paths, or resolve package version conflicts in composer.json.
+description: Guides PHP project upgrades using Composer commands. Use when helping users upgrade PHP packages, understand dependency conflicts, interpret `composer outdated` output, use `composer why-not` to diagnose version constraints, use `composer why` to trace dependencies, use `composer bump` to harden version constraints after upgrading, plan safe upgrade paths, resolve package version conflicts in composer.json, or resolve merge conflicts in composer.lock.
 ---
 
 # Composer Upgrade
@@ -17,7 +17,33 @@ Follow this sequence when upgrading a PHP project:
 6. **Harden constraints** → `composer bump` (applications only)
 
 See [references/commands.md](references/commands.md) for full flag reference, including global flags for non-interactive use (`--no-interaction --no-progress --no-ansi`).
-See [references/upgrade-workflow.md](references/upgrade-workflow.md) for detailed strategies.
+See [references/upgrade-workflow.md](references/upgrade-workflow.md) for detailed strategies, including merge conflict resolution.
+
+## Resolving composer.lock Merge Conflicts
+
+When `composer.lock` has a merge conflict, use `scripts/diff_lock.py` to compare both sides and generate the commands needed to reconcile them.
+
+**During an active merge conflict:**
+
+```bash
+# Compare HEAD vs MERGE_HEAD automatically and output composer commands
+python3 scripts/diff_lock.py --conflict
+
+# Human-readable summary of what changed
+python3 scripts/diff_lock.py --conflict --format=summary
+```
+
+**Compare any two branches or files:**
+
+```bash
+python3 scripts/diff_lock.py main:composer.lock feature-branch:composer.lock
+python3 scripts/diff_lock.py HEAD:composer.lock MERGE_HEAD:composer.lock
+python3 scripts/diff_lock.py old.lock new.lock
+```
+
+The script outputs `composer require` / `composer remove` commands that move packages from the source state to the target state. Run the generated commands, then commit the result.
+
+See [references/upgrade-workflow.md](references/upgrade-workflow.md) — "Workflow: Merge Conflict in composer.lock" — for the full step-by-step process.
 
 ## Core Commands
 

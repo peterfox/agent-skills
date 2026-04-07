@@ -207,6 +207,52 @@ The `--recursive` flag traces the full chain so you can find the root constraint
 
 ---
 
+## Workflow: Merge Conflict in composer.lock
+
+`composer.lock` is a generated file, so merge conflicts in it should be resolved by re-generating it rather than manually editing conflict markers.
+
+### Quick resolution (recommended)
+
+```bash
+# 1. Accept one side's composer.json (usually the more up-to-date branch)
+git checkout --theirs composer.json   # or --ours
+
+# 2. See what changed in the lock file between the two sides
+python3 scripts/diff_lock.py --conflict --format=summary
+
+# 3. Generate and run the commands to apply any additional changes
+python3 scripts/diff_lock.py --conflict
+# → copy and run the output commands
+
+# 4. Mark composer.lock as resolved and commit
+git add composer.lock composer.json
+git commit
+```
+
+### When you need to understand the delta first
+
+```bash
+# Summarise what changed between the two branches' lock files
+python3 scripts/diff_lock.py HEAD:composer.lock MERGE_HEAD:composer.lock --format=summary
+
+# Then decide which packages to take from which side, and run specific
+# composer require / remove commands for the ones you want to change
+```
+
+### How the script works
+
+`scripts/diff_lock.py` reads both sides of the lock file from git (no need to manually extract conflict markers), diffs the `packages` and `packages-dev` arrays, and outputs:
+- `composer require vendor/package:^X.Y` for version changes and new packages
+- `composer remove vendor/package` for removed packages
+
+It groups prod and dev packages separately and annotates each line with the old→new version so you can see what's happening at a glance.
+
+### Why not just re-run `composer install`?
+
+`composer install` installs what's already in `composer.lock` — it won't resolve the conflict. You need `composer update` or `composer require` commands to change versions, which is what the script generates for you.
+
+---
+
 ## Tips
 
 - Always commit `composer.lock` to version control for application projects (not libraries).
