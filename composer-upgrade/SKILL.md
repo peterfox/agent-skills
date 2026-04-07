@@ -10,7 +10,7 @@ description: Guides PHP project upgrades using Composer commands. Use when helpi
 Follow this sequence when upgrading a PHP project:
 
 1. **Check for security issues** → `composer audit` — fixes here are highest priority
-2. **Identify what's outdated** → `composer outdated`
+2. **Identify what's outdated** → `composer outdated --format=json`
 3. **Prioritize** — packages with CVEs AND outdated go first; see [references/audit.md](references/audit.md)
 4. **Diagnose blockers** → `composer why-not vendor/package version`
 5. **Trace dependencies** → `composer why vendor/package`
@@ -56,10 +56,10 @@ See [references/upgrade-workflow.md](references/upgrade-workflow.md) — "Workfl
 Lists packages with newer versions available.
 
 ```bash
-composer outdated                    # all packages
-composer outdated --direct           # only packages in require/require-dev
-composer outdated symfony/*          # filter by pattern
-composer outdated --format=json      # machine-readable output
+composer outdated --format=json           # preferred when parsing output (fewer tokens)
+composer outdated --direct --format=json  # only packages in require/require-dev
+composer outdated symfony/*               # filter by pattern
+composer outdated                         # plain text (for display to user only)
 ```
 
 **Reading the output:**

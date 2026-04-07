@@ -18,7 +18,7 @@ composer require vendor/package --no-interaction --no-progress --no-ansi
 composer bump --no-interaction --no-ansi
 ```
 
-Read-only commands (`outdated`, `why`, `why-not`, `show`) do not produce progress bars, so `--no-interaction --no-ansi` is sufficient for those.
+Read-only commands (`outdated`, `why`, `why-not`, `show`) do not produce progress bars, so `--no-interaction --no-ansi` is sufficient for those. When you will parse the output, add `--format=json` — it produces compact, structured data and avoids color codes and alignment padding, which reduces token use significantly.
 
 ---
 
@@ -62,6 +62,7 @@ Diagnoses why a package cannot be upgraded to a given version.
 |------|-------------|
 | `--recursive` / `-r` | Recursively trace the full dependency chain |
 | `--tree` / `-t` | Show as a tree |
+| `--format=json` | JSON output for parsing |
 
 **Example: Check what blocks symfony/console 7.0:**
 ```bash
@@ -90,6 +91,7 @@ Shows which packages require a given package.
 |------|-------------|
 | `--recursive` / `-r` | Show full reverse dependency tree |
 | `--tree` / `-t` | Display as a tree |
+| `--format=json` | JSON output for parsing |
 
 **Example: Find who depends on symfony/http-foundation:**
 ```bash
@@ -203,10 +205,12 @@ See [references/audit.md](audit.md) for a full prioritization framework and fix 
 General package inspection tool used alongside upgrade workflows.
 
 ```bash
-composer show vendor/package        # show installed version and info
-composer show --all vendor/package  # show all available versions
-composer show --tree                # show full dependency tree
-composer show --latest              # show all packages with their latest versions
+composer show vendor/package                 # show installed version and info
+composer show --all vendor/package           # show all available versions
+composer show --tree                         # show full dependency tree
+composer show --latest                       # show all packages with their latest versions
+composer show --format=json vendor/package   # structured output for parsing
+composer show --latest --format=json         # all packages + latest versions, parseable
 ```
 
 ---

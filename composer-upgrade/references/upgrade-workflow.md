@@ -84,7 +84,7 @@ This hardens `composer.json` constraints to the newly installed versions, preven
 ### 1. Check what's outdated
 
 ```bash
-composer outdated --direct
+composer outdated --direct --format=json   # use json when parsing; plain text for display
 ```
 
 ### 2. Review framework upgrade guide
@@ -138,15 +138,15 @@ For routine maintenance (security patches, bug fixes):
 ### 1. Show only direct, safe updates
 
 ```bash
-composer outdated --direct
+composer outdated --direct --format=json   # use json when parsing; plain text for display
 ```
 
-Focus on yellow (semver-safe) entries first.
+Focus on yellow/`semver-safe-update` entries first.
 
 ### 2. Batch patch-level updates
 
 ```bash
-composer outdated --patch-only --direct
+composer outdated --patch-only --direct --format=json
 ```
 
 These are usually safe to update together:
