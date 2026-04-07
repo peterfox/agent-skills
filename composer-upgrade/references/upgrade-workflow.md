@@ -260,4 +260,4 @@ It groups prod and dev packages separately and annotates each line with the old�
 - Enable `"bump-after-update": true` in `composer.json` config to automate this for the whole team.
 - Run `composer validate` after manual edits to `composer.json`.
 - `composer show --locked` shows what's in the lock file vs. what's installed — useful after merge conflicts.
-- When resolving merge conflicts in `composer.lock`, run `composer install` rather than manually editing the lock file.
+- When resolving merge conflicts in `composer.lock`, use `scripts/diff_lock.py --conflict` to generate the commands needed — do not manually edit the conflict markers.

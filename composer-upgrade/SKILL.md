@@ -51,52 +51,31 @@ See [references/upgrade-workflow.md](references/upgrade-workflow.md) — "Workfl
 
 ## Core Commands
 
+See [references/commands.md](references/commands.md) for full flag reference and version constraint quick reference.
+
 ### composer outdated
-
-Lists packages with newer versions available.
-
 ```bash
 composer outdated --format=json           # preferred when parsing output (fewer tokens)
-composer outdated --direct --format=json  # only packages in require/require-dev
-composer outdated symfony/*               # filter by pattern
-composer outdated                         # plain text (for display to user only)
+composer outdated --direct --format=json  # only direct deps
 ```
-
-**Reading the output:**
-- **Red** = semver major bump (breaking changes likely)
-- **Yellow** = semver minor/patch (safe upgrade)
-- `!` marker = package is not semver-safe (minor/patch but breaking)
-
-Columns: `name | current | latest | description`
+**Red** = major bump (breaking changes likely). **Yellow** = minor/patch (safe). `!` = not semver-safe.
 
 ### composer why-not
-
-Shows what prevents upgrading a package to a specific version.
-
 ```bash
-composer why-not vendor/package 2.0
-composer why-not php 8.2            # check what blocks a PHP version requirement
-composer why-not vendor/package "*" # check what blocks any upgrade
+composer why-not vendor/package 2.0      # what prevents this upgrade
+composer why-not php 8.2                 # what blocks a PHP version bump
 ```
-
 Output shows the dependency chain: which packages require conflicting versions.
 
 ### composer why
-
-Shows which installed packages depend on a given package.
-
 ```bash
-composer why vendor/package
-composer why-not vendor/package     # inverse: what conflicts with it
+composer why vendor/package              # which installed packages depend on this one
 ```
 
 ### composer update
-
 ```bash
-composer update                                                                        # update all (risky on large projects)
-composer update vendor/package --no-interaction --no-progress --no-ansi               # update one package
-composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi  # also update its deps
-composer update --dry-run --no-interaction --no-ansi                                  # preview changes without applying
+composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi
+composer update vendor/package --dry-run --no-interaction --no-ansi   # preview first
 ```
 
 ## Common Patterns
@@ -140,28 +119,13 @@ Then: `composer update vendor/package`
 
 ### Hardening constraints after upgrading (applications)
 
-After updating packages in an application, run `composer bump` to raise the lower bounds of constraints in `composer.json` to the currently installed versions:
-
 ```bash
-composer bump                  # harden all constraints
-composer bump vendor/package   # harden one package
+composer bump                  # raise lower bounds in composer.json to installed versions
 composer bump --dev-only       # only require-dev (safe for libraries too)
 ```
 
-Before: `"symfony/console": "^6.0"` → After: `"symfony/console": "^6.4.3"`
+Before: `"symfony/console": "^6.0"` → After: `"symfony/console": "^6.4.3"` (the `^` is preserved, so future minor/patch upgrades still work).
 
-This prevents future `composer install` runs from resolving older versions that weren't tested. It does **not** prevent future minor/patch upgrades — the `^` is preserved.
+See [references/commands.md](references/commands.md) for auto-bump config and full flag reference.
 
-**Enable auto-bump in `composer.json` for applications:**
-
-```json
-{
-    "config": {
-        "bump-after-update": true
-    }
-}
-```
-
-With this set, Composer automatically runs `bump` after every `composer update`. Use `"dev"` or `"no-dev"` to limit which dependency group is bumped.
-
-> **Applications only**: Do not run `composer bump` (without `--dev-only`) on libraries. Narrowing lower bounds of library dependencies causes version conflicts for downstream consumers.
+> **Applications only**: Do not run `composer bump` (without `--dev-only`) on libraries — it narrows constraints in ways that break downstream consumers.

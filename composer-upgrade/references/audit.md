@@ -1,16 +1,6 @@
 # composer audit — Security Checks and Prioritization
 
-## Basic Usage
-
-```bash
-composer audit                          # check all installed packages
-composer audit --no-dev                 # skip require-dev packages
-composer audit --locked                 # check composer.lock versions (not what's installed)
-composer audit --format=json            # machine-readable output
-composer audit --abandoned              # also flag abandoned packages (Composer 2.6+)
-```
-
-Exit code is non-zero if any advisories or abandoned packages are found — useful for CI gates.
+See [commands.md](commands.md) for the full flag reference (`--no-dev`, `--locked`, `--abandoned`, `--ignore-advisories`, etc.). Exit code is non-zero when advisories are found — use this for CI gates.
 
 ## Interpreting Output
 
