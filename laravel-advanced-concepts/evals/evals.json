@@ -1,0 +1,57 @@
+{
+  "skill_name": "laravel-advanced-concepts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm building a Laravel app where users can earn and spend credits (like a points/rewards system). Users earn credits when they make purchases and can spend them as discounts. I need to be able to see a full history of every credit transaction and the current balance. What's the best way to model this?",
+      "expected_output": "Recommends Event Sourcing as the right pattern, explains why (immutable audit trail, balance = sum of events), recommends spatie/laravel-event-sourcing or hirethunk/verbs, provides a concrete example with events like CreditEarned and CreditSpent, and shows how to implement an aggregate or equivalent.",
+      "files": [],
+      "assertions": [
+        "Recommends Event Sourcing as the primary approach (not plain Eloquent CRUD with a transactions table)",
+        "Names a specific library: spatie/laravel-event-sourcing or hirethunk/verbs",
+        "Shows an event class representing a credit transaction (e.g., CreditEarned, CreditAdded, MoneyAdded or similar)",
+        "Explains that balance is derived from events (not stored directly)",
+        "Mentions the immutable audit trail / full history as a key benefit"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We have an Order model with a status field. Right now it's just a string but we keep getting bugs where orders end up in impossible states — like a delivered order getting set back to pending. We want to enforce that status transitions only happen in valid sequences. How do we do this properly in Laravel?",
+      "expected_output": "Recommends spatie/laravel-model-states, explains state machine concepts (defined transitions, CouldNotPerformTransition exception on invalid transitions), shows how to create State base class with StateConfig defining allowed transitions, and how to perform transitions.",
+      "files": [],
+      "assertions": [
+        "Recommends spatie/laravel-model-states specifically",
+        "Shows StateConfig with allowTransition() defining the valid transition graph",
+        "Shows concrete State subclasses (Pending, Confirmed, Shipped, Delivered, Cancelled or similar)",
+        "Mentions that invalid transitions throw an exception",
+        "Shows HasStates trait and status cast on the Order model"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We're about to launch a major redesign of our checkout flow. We don't want to roll it out to everyone at once — we want to test it with 5% of users first, then gradually increase. Some of our team also needs to always see the new version for QA. What's the cleanest way to handle this in Laravel?",
+      "expected_output": "Recommends Laravel Pennant as the primary solution, shows Feature::define() with percentage rollout logic and staff override, explains that values are stored after first resolution (database driver), shows blade directives and how to activate/deactivate for specific users.",
+      "files": [],
+      "assertions": [
+        "Recommends Laravel Pennant as the primary solution",
+        "Shows Feature::define() with percentage rollout logic",
+        "Addresses the staff/QA requirement — internal users always see the new version",
+        "Shows how to check the flag in code (Feature::active() or @feature blade directive)",
+        "Mentions ability to manually activate/deactivate for specific users"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I have a subscription model that goes through states: trialing, active, past_due, paused, cancelled. Different actions are allowed depending on the state (e.g., you can only pause an active subscription). Should I use a state machine or event sourcing for this? Can you show me how to set it up?",
+      "expected_output": "Correctly recommends State Machine (not Event Sourcing) for this use case — the transitions are the key logic, not audit history. Shows spatie/laravel-model-states setup with a Subscription model, concrete state classes for each status, and StateConfig with allowed transitions.",
+      "files": [],
+      "assertions": [
+        "Correctly recommends State Machine as the primary approach (not Event Sourcing)",
+        "Explains WHY state machine fits better — enforcing valid transitions is the core requirement",
+        "Recommends spatie/laravel-model-states",
+        "Shows state classes for subscription lifecycle (Trialing, Active, PastDue, Paused, Cancelled)",
+        "Shows the valid transition graph for a subscription"
+      ]
+    }
+  ]
+}
