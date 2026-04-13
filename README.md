@@ -7,6 +7,8 @@ A collection of Claude Code skills for PHP development workflows.
 | Skill | Description |
 |-------|-------------|
 | [composer-upgrade](composer-upgrade/) | Upgrading PHP projects with Composer — `outdated`, `why-not`, `bump` |
+| [gritql](gritql/) | Writing GritQL patterns for structural code refactoring and migration across languages |
+| [npm-upgrade](npm-upgrade/) | Upgrading Node.js projects with npm, yarn, or pnpm — audits, conflicts, lock files |
 | [packagist](packagist/) | Searching and looking up PHP packages on Packagist via the API |
 | [php-type-safety](php-type-safety/) | PHP type safety using webmozarts/assert and PHPDoc shapes for PHPStan/Psalm |
 | [phpstan-developer](phpstan-developer/) | Building PHPStan rules, collectors, and type extensions |
