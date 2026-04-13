@@ -14,6 +14,7 @@ A collection of Claude Code skills for PHP development workflows.
 | [php-type-safety](php-type-safety/) | PHP type safety using webmozarts/assert and PHPDoc shapes for PHPStan/Psalm |
 | [phpstan-developer](phpstan-developer/) | Building PHPStan rules, collectors, and type extensions |
 | [rector-developer](rector-developer/) | Building Rector PHP rules for AST-based code transformations |
+| [remotion-3d-background-developer](remotion-3d-background-developer/) | Generating procedural 3D backgrounds for Remotion using react-three-fiber and GLSL shaders — liquid gradients, plasma, aurora, galaxy, and geometric/voronoi styles |
 | [serpapi](serpapi/) | Searching Google, Google Shopping, Google Jobs, eBay, and Amazon via SerpApi |
 | [slidewire-developer](slidewire-developer/) | Building and refining SlideWire presentations in Laravel/Livewire |
 
