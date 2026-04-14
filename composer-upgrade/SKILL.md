@@ -12,9 +12,9 @@ Follow this sequence when upgrading a PHP project:
 1. **Check for security issues** → `composer audit` — fixes here are highest priority
 2. **Identify what's outdated** → `composer outdated --format=json`
 3. **Prioritize** — packages with CVEs AND outdated go first; see [references/audit.md](references/audit.md)
-4. **Diagnose blockers** → `composer why-not vendor/package version`
+4. **Diagnose blockers** → `composer why-not vendor/package version` — note any sub-packages blocking the update
 5. **Trace dependencies** → `composer why vendor/package`
-6. **Update packages** → `composer update vendor/package --with-all-dependencies`
+6. **Update packages** → `composer update vendor/package` — if blocked, include identified blockers: `composer update vendor/package blocker/one blocker/two`
 7. **Test**
 8. **Harden constraints** → `composer bump` (applications only)
 9. **Re-audit** → `composer audit` to confirm all advisories are resolved
@@ -74,8 +74,13 @@ composer why vendor/package              # which installed packages depend on th
 
 ### composer update
 ```bash
-composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi
+composer update vendor/package --no-interaction --no-progress --no-ansi
 composer update vendor/package --dry-run --no-interaction --no-ansi   # preview first
+
+# If blocked, first identify which sub-dependencies are preventing the update:
+composer why-not vendor/package 2.0
+# Then include only those specific blockers in the update command:
+composer update vendor/package blocker/one blocker/two --no-interaction --no-progress --no-ansi
 ```
 
 ## Common Patterns
@@ -101,8 +106,16 @@ Lists every package that lacks a `php: ^8.2` constraint, sorted by most blocking
 Prefer updating direct dependencies one at a time with `--dry-run` first:
 
 ```bash
-composer update vendor/package --with-all-dependencies --dry-run --no-interaction --no-ansi
-composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi
+composer update vendor/package --dry-run --no-interaction --no-ansi
+composer update vendor/package --no-interaction --no-progress --no-ansi
+```
+
+If blocked, use `composer why-not` to identify the specific packages preventing the update, then include only those in the update command:
+
+```bash
+composer why-not vendor/package 2.0
+# → reveals blocker/one and blocker/two are preventing the update
+composer update vendor/package blocker/one blocker/two --no-interaction --no-progress --no-ansi
 ```
 
 ### Bumping a major version constraint

@@ -12,7 +12,7 @@ Always use these flags when running Composer commands as an agent to suppress pr
 
 **Apply to all mutating commands:**
 ```bash
-composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi
+composer update vendor/package --no-interaction --no-progress --no-ansi
 composer install --no-interaction --no-progress --no-ansi
 composer require vendor/package --no-interaction --no-progress --no-ansi
 composer bump --no-interaction --no-ansi
@@ -113,14 +113,24 @@ composer why symfony/http-foundation
 | `--lock` | Only update `composer.lock` hash, not packages |
 | `--interactive` / `-i` | Interactive package selection |
 
-**Example: Update a package and all of its transitive dependencies:**
+**Example: Update a package:**
 ```bash
-composer update laravel/framework --with-all-dependencies
+composer update laravel/framework
 ```
 
 **Example: Preview what would change:**
 ```bash
-composer update laravel/framework --with-all-dependencies --dry-run
+composer update laravel/framework --dry-run
+```
+
+**Example: Identify blockers then update with only those specific sub-dependencies:**
+```bash
+# Identify which packages are blocking laravel/framework 11.0
+composer why-not laravel/framework 11.0
+# → reveals blocker/one and blocker/two
+
+# Update the target together with its identified blockers
+composer update laravel/framework blocker/one blocker/two
 ```
 
 ---

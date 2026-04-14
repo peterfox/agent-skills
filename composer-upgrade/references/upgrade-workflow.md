@@ -34,7 +34,7 @@ composer show --all vendor/package | grep -A 20 "requires"
 ```
 
 Options:
-- **Package has a new version**: Update it (`composer update vendor/package --with-all-dependencies`)
+- **Package has a new version**: Update it — run `composer why-not vendor/package NEW_VERSION` first to identify any sub-dependency blockers, then `composer update vendor/package blocker/one blocker/two`
 - **Package is abandoned**: Find a replacement
 - **Package is yours**: Update its `platform` constraint
 
@@ -66,7 +66,7 @@ Then run `composer update` to force Composer to resolve for that platform. Remov
 ### 5. Update all packages
 
 ```bash
-composer update --with-all-dependencies
+composer update
 ```
 
 ### 6. Bump constraints (application projects)
@@ -91,30 +91,30 @@ composer outdated --direct --format=json   # use json when parsing; plain text f
 
 Check the official upgrade guide for the framework (e.g., `laravel.com/docs/upgrade`). Note any manual changes to config files, removed APIs, renamed methods.
 
-### 3. Update the framework package
+### 3. Identify what's blocking the target version
 
 ```bash
-composer update laravel/framework --with-all-dependencies --dry-run
+composer why-not laravel/framework 11.0
+```
+
+Note every package in the output — these are the blockers to include alongside the framework in the update command.
+
+### 4. Preview the update
+
+```bash
+composer update laravel/framework blocker/one blocker/two --dry-run
 ```
 
 Review the dry-run output. Look for:
 - Packages that will be downgraded
 - Packages that cannot be resolved
 
-### 4. Resolve conflicts shown by dry-run
-
-For each unresolvable package:
-
-```bash
-composer why-not laravel/framework 11.0
-```
-
-Update or replace blocking packages, then re-run the dry-run.
+If new blockers appear in the dry-run output, run `composer why-not` for those too and add them to the package list.
 
 ### 5. Apply the update
 
 ```bash
-composer update laravel/framework --with-all-dependencies
+composer update laravel/framework blocker/one blocker/two --no-interaction --no-progress --no-ansi
 ```
 
 ### 6. Run tests
@@ -243,11 +243,27 @@ Problem 1
 
 ### Symptom: A transitive dependency blocks an upgrade
 
+When a plain `composer update vendor/package` fails, use `why-not` to identify exactly which sub-dependencies are blocking it, then include only those specific packages in the update command:
+
+```bash
+# Step 1: identify what's blocking the target version
+composer why-not vendor/target-package 3.0
+
+# Example output:
+#   other/dep  v1.2.0  requires  vendor/target-package (^2.0)
+#   another/dep  v2.0.0  requires  other/dep (<2.0)
+
+# Step 2: update the target together with its identified blockers only
+composer update vendor/target-package other/dep --no-interaction --no-progress --no-ansi
+```
+
+Use `--recursive` to trace deeper chains when the direct blocker is itself blocked:
+
 ```bash
 composer why-not vendor/target-package 3.0 --recursive
 ```
 
-The `--recursive` flag traces the full chain so you can find the root constraint to change.
+This approach is more targeted than `--with-all-dependencies`, which updates every transitive dependency and has a wider blast radius. Only reach for `--with-all-dependencies` if the blocker chain is too deep or complex to enumerate manually.
 
 ---
 
