@@ -135,7 +135,15 @@ Commit the updated `composer.json` alongside `composer.lock`.
 
 For routine maintenance (security patches, bug fixes):
 
-### 1. Show only direct, safe updates
+### 1. Run a security audit first
+
+```bash
+composer audit --format=json
+```
+
+CVEs change the priority order — packages with advisories jump ahead of packages that are merely outdated.
+
+### 2. Show only direct, safe updates
 
 ```bash
 composer outdated --direct --format=json   # use json when parsing; plain text for display
@@ -143,7 +151,7 @@ composer outdated --direct --format=json   # use json when parsing; plain text f
 
 Focus on yellow/`semver-safe-update` entries first.
 
-### 2. Batch patch-level updates
+### 3. Batch patch-level updates
 
 ```bash
 composer outdated --patch-only --direct --format=json
@@ -155,21 +163,57 @@ These are usually safe to update together:
 composer update vendor/pkg1 vendor/pkg2 vendor/pkg3
 ```
 
-### 3. Handle minor updates individually
+### 4. Handle minor updates individually
 
 Minor updates may contain deprecations or behaviour changes. Update and test one at a time.
 
-### 4. Defer red (major) updates
+### 5. Defer red (major) updates
 
 Major updates need their own upgrade workflow. Note them, but don't include them in routine maintenance.
 
-### 5. Bump after patching (application projects)
+### 6. Bump after patching (application projects)
 
 ```bash
 composer bump
 ```
 
 Run after each batch of updates to lock in the new minimums. Commit alongside `composer.lock`.
+
+---
+
+## Techniques for Major Version Upgrades
+
+### Updating the version constraint with `composer require`
+
+When bumping a package to a new major version, prefer `composer require` over hand-editing `composer.json` and running `composer update`. The `require` command atomically updates the constraint and resolves the lock file in one step:
+
+```bash
+# Change constraint from ^5.0 to ^6.0 and resolve in one command
+composer require spatie/laravel-permission:"^6.0" --no-interaction --no-progress --no-ansi
+
+# With dry-run first
+composer require spatie/laravel-permission:"^6.0" --dry-run --no-interaction --no-ansi
+```
+
+### Dual-constraint technique for risky upgrades
+
+For packages with significant breaking changes, you can allow Composer to resolve both the old and new major version simultaneously. This lets you test the new version while keeping the old version as a fallback constraint:
+
+```bash
+# Allow both major versions while testing
+composer require spatie/laravel-permission:"^5.11.0|^6.4.0" --no-interaction --no-progress --no-ansi
+```
+
+Run your test suite. If the new major version resolves and tests pass:
+
+```bash
+# Commit to the new version
+composer require spatie/laravel-permission:"^6.4.0" --no-interaction --no-progress --no-ansi
+```
+
+If something is broken and you need to roll back, the `|` constraint means Composer can still satisfy the old major version while you investigate.
+
+This technique is particularly useful for packages that touch the database, cache, or authentication layers (e.g. `spatie/laravel-permission`, `laravel/sanctum`), where a silent regression is hard to catch immediately.
 
 ---
 

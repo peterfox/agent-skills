@@ -105,17 +105,25 @@ composer update vendor/package --with-all-dependencies --dry-run --no-interactio
 composer update vendor/package --with-all-dependencies --no-interaction --no-progress --no-ansi
 ```
 
-### Relaxing constraints in composer.json
+### Bumping a major version constraint
 
-When `why-not` reveals a constraint in your own `composer.json`, update the version constraint and re-run:
+Prefer `composer require` over hand-editing `composer.json` — it updates the constraint and resolves the lock in one step:
 
-```json
-"require": {
-    "vendor/package": "^3.0"   // was "^2.0"
-}
+```bash
+composer require vendor/package:"^3.0" --dry-run --no-interaction --no-ansi
+composer require vendor/package:"^3.0" --no-interaction --no-progress --no-ansi
 ```
 
-Then: `composer update vendor/package`
+For risky upgrades (auth, permissions, database layers), use a dual constraint to test before committing:
+
+```bash
+# Allow both old and new major versions while testing
+composer require vendor/package:"^2.5.0|^3.0" --no-interaction --no-progress --no-ansi
+# If tests pass, lock in the new version:
+composer require vendor/package:"^3.0" --no-interaction --no-progress --no-ansi
+```
+
+See [references/upgrade-workflow.md](references/upgrade-workflow.md) — "Techniques for Major Version Upgrades" — for more detail.
 
 ### Hardening constraints after upgrading (applications)
 

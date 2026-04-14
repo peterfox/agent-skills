@@ -1,0 +1,109 @@
+{
+  "skill_name": "composer-upgrade",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I ran composer audit on our Laravel app and got this. Which ones are urgent and what do I actually need to do?\n\n```json\n{\n  \"advisories\": {\n    \"guzzlehttp/guzzle\": [\n      {\n        \"advisoryId\": \"GHSA-25tp-pj85-hfh9\",\n        \"packageName\": \"guzzlehttp/guzzle\",\n        \"title\": \"Failure to strip the Authorization header on HTTP downgrade\",\n        \"url\": \"https://github.com/advisories/GHSA-25tp-pj85-hfh9\",\n        \"affectedVersions\": \">=4.0.0-RC2,<7.5.0\",\n        \"cve\": \"CVE-2022-29248\",\n        \"severity\": \"high\"\n      }\n    ],\n    \"laravel/framework\": [\n      {\n        \"advisoryId\": \"GHSA-3p32-j457-pg5x\",\n        \"packageName\": \"laravel/framework\",\n        \"title\": \"Potential timing attack via Str::length() in cookie signature check\",\n        \"url\": \"https://github.com/advisories/GHSA-3p32-j457-pg5x\",\n        \"affectedVersions\": \">=9.0.0,<9.21.0\",\n        \"cve\": \"CVE-2022-40482\",\n        \"severity\": \"medium\"\n      }\n    ],\n    \"phpmailer/phpmailer\": [\n      {\n        \"advisoryId\": \"GHSA-f7wm-x4gw-6m23\",\n        \"packageName\": \"phpmailer/phpmailer\",\n        \"title\": \"PHPMailer critical RCE vulnerability\",\n        \"url\": \"https://github.com/advisories/GHSA-f7wm-x4gw-6m23\",\n        \"affectedVersions\": \"<6.6.4\",\n        \"cve\": \"CVE-2021-34551\",\n        \"severity\": \"critical\"\n      }\n    ]\n  },\n  \"abandoned\": {}\n}\n```\n\nWe're running guzzle 7.4.5, laravel/framework 9.19.0, and phpmailer 6.5.3. What order should I fix these in and what commands do I run?",
+      "expected_output": "A prioritized fix plan: phpmailer (critical RCE) first with composer update phpmailer/phpmailer --with-all-dependencies, then guzzlehttp/guzzle (high severity auth header leak), then laravel/framework (medium timing attack). Should include the specific composer update commands with --no-interaction --no-progress --no-ansi flags, suggest checking why-not first if a direct update might be blocked, and recommend running composer audit again at the end to confirm all advisories are resolved.",
+      "assertions": [
+        {
+          "name": "phpmailer-identified-as-top-priority",
+          "description": "phpmailer/phpmailer is identified as the highest priority package to fix (critical severity / RCE)"
+        },
+        {
+          "name": "correct-severity-ordering",
+          "description": "guzzlehttp/guzzle (high) is addressed before laravel/framework (medium) in the fix order"
+        },
+        {
+          "name": "composer-update-commands-provided",
+          "description": "Specific `composer update` commands are given for the affected packages (not just general advice)"
+        },
+        {
+          "name": "with-all-dependencies-flag",
+          "description": "`--with-all-dependencies` flag appears in at least one of the suggested update commands"
+        },
+        {
+          "name": "re-audit-recommended",
+          "description": "Recommends re-running `composer audit` after fixes to verify all advisories are resolved"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Trying to upgrade symfony/http-client to 7.x on our app and composer is dying. Here's the error:\n\n```\nYour requirements could not be resolved to an installable set of packages.\n\n  Problem 1\n    - Root composer.json requires symfony/http-client ^7.0\n    - symfony/http-client[v7.0.0, ..., v7.1.3] require symfony/http-foundation ^7.0\n    - api-platform/core v3.2.8 requires symfony/http-foundation ^6.4|^7.0\n    - api-platform/core v3.2.8 requires symfony/serializer ^6.4|^7.0\n    - symfony/serializer[v7.0.0, ..., v7.1.3] require php ^8.2\n    - Your platform only supports php >=8.1\n```\n\nWe're on PHP 8.1. I'm not sure if I should try to upgrade PHP or find a workaround. How do I figure out the full picture of what's blocking this?",
+      "expected_output": "Guidance to use `composer why-not` to trace blockers (e.g. `composer why-not symfony/http-client 7.0` and `composer why-not php 8.2`). Should identify the two distinct blockers: php version (8.1 vs required 8.2) and transitive deps. Should explain the options: upgrade to PHP 8.2 or stay on symfony 6.x. Should suggest checking what other packages block PHP 8.2 with `composer why-not php 8.2` and explain the platform config option for testing. Should NOT just say 'upgrade PHP' without showing the diagnostic steps.",
+      "assertions": [
+        {
+          "name": "why-not-command-mentioned",
+          "description": "`composer why-not` is mentioned as a diagnostic tool to understand blockers"
+        },
+        {
+          "name": "php-version-identified-as-blocker",
+          "description": "PHP 8.1 vs PHP 8.2 requirement is explicitly identified as one of the blockers"
+        },
+        {
+          "name": "multiple-options-presented",
+          "description": "Both paths are presented: upgrading PHP to 8.2 vs staying on Symfony 6.x (not just one option)"
+        },
+        {
+          "name": "diagnostic-first-not-prescriptive",
+          "description": "Suggests running diagnostic commands before prescribing a solution, rather than jumping straight to 'upgrade PHP'"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Ugh, I just merged main into my feature branch and now composer.lock has a huge merge conflict. My branch added some new packages and main also had some updates. I don't want to just pick one side and lose changes from the other. What's the right way to handle this?",
+      "expected_output": "Should explain that composer.lock is generated and shouldn't be manually edited. Should direct the user to use `python3 scripts/diff_lock.py --conflict --format=summary` to understand what changed on each side, then `python3 scripts/diff_lock.py --conflict` to generate the composer require/remove commands to reconcile both sides. Should cover the basic steps: accept one side's composer.json, run the diff_lock script, apply the generated commands, then commit. Should NOT tell the user to just re-run `composer install` (which won't resolve the conflict).",
+      "assertions": [
+        {
+          "name": "diff-lock-script-mentioned",
+          "description": "`diff_lock.py` or `scripts/diff_lock.py` is mentioned as the tool to use"
+        },
+        {
+          "name": "composer-lock-is-generated",
+          "description": "Explains that composer.lock is a generated file and should not be manually edited to resolve conflicts"
+        },
+        {
+          "name": "no-composer-install-as-fix",
+          "description": "Does NOT suggest `composer install` as the way to resolve the conflict (it won't work)"
+        },
+        {
+          "name": "conflict-flag-used",
+          "description": "The `--conflict` flag for diff_lock.py is shown or the workflow uses git to extract both sides"
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Haven't updated our packages in about 6 months, finally have some time. Here's composer outdated:\n\n```\nPackage                    Current  Latest  Description\ncarbon/carbon              2.62.1   3.2.0   A simple PHP API extension for DateTime\ndoctrine/dbal              3.6.7    4.0.1   Database Abstraction Layer\nguzzlehttp/guzzle          7.8.0    7.8.2   Guzzle is a PHP HTTP client library\nmonolog/monolog            2.9.3    3.6.0   Sends your logs to files, sockets, inboxes, HipChat...\nnelmioapidocbundle/...     4.17.2   4.18.0  Generate a decent API doc\nphpunit/phpunit            9.6.17   11.2.0  The PHP Unit Testing framework\nramsey/uuid                4.7.5    4.7.6   A PHP library for generating universally unique identifiers\nsymfony/console            6.4.1    7.1.3   Symfony Console Component\nspatie/laravel-permission  5.11.0   6.4.0   Associate users with roles and permissions\n```\n\nThis is a production Laravel app. Where do I start and what's safe to batch together?",
+      "expected_output": "Should triage the output by risk level: patch-only updates (ramsey/uuid, guzzlehttp/guzzle, nelmio) are safe to batch together; major version bumps (carbon 2→3, doctrine/dbal 3→4, monolog 2→3, spatie 5→6, phpunit 9→11, symfony 6→7) each need their own upgrade workflow with testing. Should recommend running `composer audit` first to check for CVEs. Should advise using `--dry-run` before committing to any update. Should suggest starting with the patch-only batch, then tackling major upgrades one at a time in dependency order. Should NOT recommend running `composer update` on everything at once.",
+      "assertions": [
+        {
+          "name": "composer-audit-first",
+          "description": "Recommends running `composer audit` as a first step before starting any upgrades"
+        },
+        {
+          "name": "patch-updates-identified-as-batchable",
+          "description": "Identifies patch/minor updates (guzzle 7.8.0→7.8.2, ramsey/uuid 4.7.5→4.7.6) as safe to batch together"
+        },
+        {
+          "name": "major-updates-flagged-as-individual",
+          "description": "Flags major version bumps (carbon 2→3, doctrine 3→4, monolog 2→3, etc.) as needing individual handling with testing"
+        },
+        {
+          "name": "no-update-all-at-once",
+          "description": "Does NOT suggest running `composer update` without package names to update everything at once"
+        },
+        {
+          "name": "dry-run-suggested",
+          "description": "`--dry-run` flag is mentioned for previewing changes before applying them"
+        }
+      ],
+      "files": []
+    }
+  ]
+}
