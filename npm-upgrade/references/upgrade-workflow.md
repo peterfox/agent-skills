@@ -195,33 +195,37 @@ Find the direct dependency that pulls in the old version, then update that direc
 
 ## Workflow: Merge Conflict in package-lock.json
 
-`package-lock.json` is auto-generated, so merge conflicts should be resolved by regeneration rather than manual editing.
+`package-lock.json` is auto-generated. Don't edit conflict markers by hand. The preferred approach is to use `diff_lock.py` to generate precise npm commands for exactly what the other branch changed — this is more surgical than deleting and regenerating the whole lock file.
 
-### Quick resolution (recommended)
+### Preferred resolution — apply changes with npm commands
 
 ```bash
-# 1. Choose which package.json to use (usually the more up-to-date branch)
-git checkout --theirs package.json   # or --ours
+# 1. Accept one side's package.json as the base (usually your branch)
+git checkout --ours package.json   # or --theirs
 
-# 2. See what changed in the lock file between the two branches
+# 2. See what the other branch changed
 python3 scripts/diff_lock.py --conflict --format=summary
 
-# 3. Regenerate the lock file cleanly
-rm package-lock.json
-npm install
+# 3. Get the npm commands to apply those changes
+python3 scripts/diff_lock.py --conflict
 
-# 4. Commit
+# 4. Run the generated commands
+# e.g.: npm install axios@1.7.7
+#       npm install zod@3.23.8
+#       npm uninstall some-removed-package
+
+# 5. Commit
 git add package-lock.json package.json
 git commit
 ```
 
-### When you need to understand the delta first
+### When you need to compare specific git refs
 
 ```bash
 # Summarise what changed between the two branches' lock files
 python3 scripts/diff_lock.py HEAD:package-lock.json MERGE_HEAD:package-lock.json --format=summary
 
-# Generate npm commands to move selectively from one state to another
+# Generate npm commands to move from one state to another
 python3 scripts/diff_lock.py HEAD:package-lock.json MERGE_HEAD:package-lock.json
 ```
 

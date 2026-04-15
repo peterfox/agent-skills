@@ -5,6 +5,14 @@ description: Guides Node.js project upgrades using npm, yarn, or pnpm. Use when 
 
 # npm Upgrade
 
+## Approach
+
+Stay focused on **commands and their output**. Your job is to run the right diagnostic commands, interpret what they show, and give a clear upgrade sequence.
+
+**Do not** describe API changes, new syntax, migration steps, or breaking change details for specific packages — no `createRoot` examples, no flat config explanations, no import path changes. That belongs in the package's own migration guide, not here. Stop at "upgrade this package" and let the user read the relevant docs if they need to migrate code.
+
+When you have enough information to recommend a path, recommend it confidently. Don't hedge with a list of options unless the situation genuinely requires a decision from the user.
+
 ## Detecting the Package Manager
 
 Check which lock file exists before running commands:
@@ -37,42 +45,31 @@ See [references/audit.md](references/audit.md) for security audit details, sever
 
 ## Resolving package-lock.json Merge Conflicts
 
-When `package-lock.json` has a merge conflict, regenerate it rather than editing conflict markers manually — the file is auto-generated and editing it by hand is error-prone.
+Never edit conflict markers in `package-lock.json` by hand, and avoid blunt `rm package-lock.json && npm install` — that throws away both sides' changes indiscriminately. Instead, use `diff_lock.py` to generate precise npm commands that apply exactly what the other branch changed.
 
-**Quick resolution (recommended):**
+**Preferred approach — apply the other side's changes with npm commands:**
 
 ```bash
-# 1. Accept one side's package.json (usually the more up-to-date branch)
-git checkout --theirs package.json   # or --ours
+# 1. Accept one side's package.json as the base (usually your branch)
+git checkout --ours package.json
 
-# 2. Regenerate the lock file from scratch
-git checkout --theirs package-lock.json   # take one side as a base, then...
-npm install                               # ...regenerate it properly
+# 2. See what the other branch changed in the lock file
+python3 scripts/diff_lock.py --conflict --format=summary
 
-# OR: delete it entirely and let npm rebuild
-rm package-lock.json && npm install
+# 3. Get the exact npm commands to apply those changes
+python3 scripts/diff_lock.py --conflict
 
-# 3. Commit the result
+# 4. Run the generated commands (e.g.)
+npm install axios@1.7.7
+npm install zod@3.23.8
+npm uninstall some-removed-package
+
+# 5. Commit
 git add package-lock.json package.json
 git commit
 ```
 
-**To understand what changed between branches:**
-
-```bash
-# Human-readable summary of what changed in the lock file
-python3 scripts/diff_lock.py HEAD:package-lock.json MERGE_HEAD:package-lock.json --format=summary
-
-# Generate npm install/uninstall commands to move from source to target state
-python3 scripts/diff_lock.py HEAD:package-lock.json MERGE_HEAD:package-lock.json
-```
-
-**During an active merge conflict:**
-
-```bash
-python3 scripts/diff_lock.py --conflict
-python3 scripts/diff_lock.py --conflict --format=summary
-```
+The `--conflict` flag reads both sides of the lock file directly from git — no need to extract markers manually. The default output (without `--format=summary`) produces ready-to-run npm install/uninstall commands for every change.
 
 See [references/upgrade-workflow.md](references/upgrade-workflow.md) — "Workflow: Merge Conflict in package-lock.json" — for the full step-by-step process.
 
@@ -128,7 +125,7 @@ npm ls <package>
 npm view <package> versions --json
 ```
 
-Look at the `dependencies` or `peerDependencies` of the constraining package to understand what ranges they allow, then decide whether to update the constrainer first or relax your own range.
+Run these first, then give a direct recommendation: update the constraining package, relax your own range, or use an override. Pick the right path based on what the output shows — don't list all three as equal options.
 
 ### "Safe incremental upgrade"
 
@@ -143,7 +140,7 @@ npm update <package>
 npm install <package>@latest
 ```
 
-Prefer updating direct dependencies one at a time, running tests between each.
+Prefer updating direct dependencies one at a time, running tests between each. For major version bumps, recommend doing each on its own branch with its own commit — this makes it easy to isolate breakage and revert if needed.
 
 ### Relaxing constraints in package.json
 
